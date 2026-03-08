@@ -1,4 +1,3 @@
-# .github/workflows/build_apk.yml
 name: Build APK
 
 on:
@@ -6,18 +5,7 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
-  release:
-    types: [published]
   workflow_dispatch:
-    inputs:
-      build_type:
-        description: 'Build type'
-        required: true
-        default: 'debug'
-        type: choice
-        options:
-          - debug
-          - release
 
 jobs:
   build:
@@ -36,21 +24,22 @@ jobs:
           java-version: '17'
           cache: gradle
 
-      - name: Install Flutter
+      - name: Install Flutter 3.24.5
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.5'
           channel: 'stable'
           cache: true
 
-      - name: Flutter version
-        run: flutter --version
-
       - name: Get dependencies
         run: flutter pub get
 
-      - name: Analyze (non-blocking)
-        run: flutter analyze --no-fatal-infos || true
+      - name: Regenerate Android project
+        run: |
+          rm -rf android/
+          flutter create --platforms=android --org com.ledgie .
+          sed -i 's/applicationId "com.ledgie.ledgie"/applicationId "com.ledgie.app"/' android/app/build.gradle
+          sed -i 's/namespace "com.ledgie.ledgie"/namespace "com.ledgie.app"/' android/app/build.gradle
 
       - name: Build debug APK
         run: flutter build apk --debug --no-tree-shake-icons
@@ -61,36 +50,3 @@ jobs:
           name: ledgie-debug-apk
           path: build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 30
-
-      # ── Signed release (only on tagged release) ──────────────────────────
-      - name: Decode keystore
-        if: github.event_name == 'release' && secrets.ANDROID_KEYSTORE_BASE64 != ''
-        env:
-          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
-          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
-          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
-        run: |
-          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > android/app/ledgie.jks
-          cat > android/key.properties <<EOF
-          storePassword=$ANDROID_KEYSTORE_PASSWORD
-          keyPassword=$ANDROID_KEY_PASSWORD
-          keyAlias=$ANDROID_KEY_ALIAS
-          storeFile=ledgie.jks
-          EOF
-
-      - name: Build release APK
-        if: github.event_name == 'release' && secrets.ANDROID_KEYSTORE_BASE64 != ''
-        run: flutter build apk --release --split-per-abi --no-tree-shake-icons
-
-      - name: Attach APKs to Release
-        if: github.event_name == 'release'
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            build/app/outputs/flutter-apk/app-arm64-v8a-release.apk
-            build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk
-            build/app/outputs/flutter-apk/app-debug.apk
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
