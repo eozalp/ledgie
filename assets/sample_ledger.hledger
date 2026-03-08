@@ -1,0 +1,64 @@
+; Ledgie sample ledger — hledger format
+; Edit via the editor or import your own file.
+
+account assets
+account assets:bank:checking
+account assets:bank:savings
+account assets:cash
+account liabilities
+account liabilities:creditcard
+account income
+account income:salary
+account expenses
+account expenses:food
+account expenses:transport
+account expenses:utilities
+account expenses:entertainment
+
+2024-01-01 Opening balance
+    assets:bank:checking   5000 TRY
+    equity:opening
+
+2024-01-05 * Salary
+    assets:bank:checking   15000 TRY
+    income:salary
+
+2024-01-08 Migros market
+    expenses:food   450 TRY
+    assets:bank:checking
+
+2024-01-10 Akaryakıt
+    expenses:transport   320 TRY
+    assets:bank:checking
+
+2024-01-15 Elektrik faturası
+    expenses:utilities   280 TRY
+    liabilities:creditcard
+
+2024-02-05 * Salary
+    assets:bank:checking   15000 TRY
+    income:salary
+
+2024-02-09 Restoran
+    expenses:food   650 TRY
+    assets:bank:checking
+
+2024-02-12 Akaryakıt
+    expenses:transport   380 TRY
+    assets:bank:checking
+
+2024-02-20 Netflix
+    expenses:entertainment   150 TRY
+    liabilities:creditcard
+
+2024-03-05 * Salary
+    assets:bank:checking   15000 TRY
+    income:salary
+
+2024-03-10 Market alışverişi
+    expenses:food   520 TRY
+    assets:bank:checking
+
+2024-03-18 Taksim seyahat
+    expenses:transport   120 TRY
+    assets:cash
